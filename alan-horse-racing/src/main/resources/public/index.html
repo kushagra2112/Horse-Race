@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<HTML>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Horse Race Dashboard</title>
+<link rel="stylesheet" href="../css/bootstrap.min.css">
+      <link rel="stylesheet" href="../css/bootstrap.min.css.map">
+      <link rel="stylesheet" href="../css/bootstrap-grid.css">
+      <link rel="stylesheet" href="../css/dataTables.bootstrap4.min.css">
+	  <link rel="stylesheet" href="../css/bootstrap-select.css">
+	  <link rel="stylesheet" href="../css/jquery.dataTables.min.css">
+	  
+	  
+      <link rel="stylesheet" href="../css/main.css">
+      <script type="text/javascript" src="../js/jquery-3.5.1.js"></script>
+      <script type="text/javascript" src="../js/bootstrap.bundle.min.js"></script>
+      <script type="text/javascript" src="../js/bootstrap.min.js"></script>
+      <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
+      <script type="text/javascript" src="../js/myScript.js"></script>
+	  <script type="text/javascript" src="../js/bootstrap-select.js"></script>
+	  <script type="text/javascript" src="../js/bootstrap-select.min.js"></script>
+	  <script type="text/javascript" src="../js/bootstrap.bundle.min.js"></script>
+	  <!--<script type="text/javascript" src="../js/bootstrap-datetimepicker.min.js"></script>-->
+</head>
+
+<body class="container-fluid">
+	<div class="loader text-center">
+		<button class="btn btn-lg btn-primary btn-block">Horse Race Dashboard</button>
+		
+		<div class ="col-md-12 align-items-end text-center">
+			<button class="btn btn-lg btn-default btn-block">Loading...</button>
+		</div>
+	</div>
+	
+	<div class="row">
+		<div class="col-md-12 mt-10">
+			<button class="btn btn-lg btn-primary btn-block"
+				onclick="window.reload();" id="mainHeading">Horse Race Dashboard</button>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-md-2 mt-10">
+			<button class="btn btn-md btn-info" data-toggle="collapse"
+				data-target="#uploadResultFile" aria-expanded="false"
+				aria-controls="uploadResultFile">Upload Result File</button>
+		</div>
+		<div class="col-md-2 mt-10" style = "display:none">
+			<button class="btn btn-md btn-info" data-toggle="collapse"
+				data-target="#uploadSpeedFile" aria-expanded="false"
+				aria-controls="uploadSpeedFile">Upload Speed File</button>
+		</div>
+		<div class="col-md-2 mt-10">
+			<button class="btn btn-md btn-info" type="button"
+				data-toggle="collapse" data-target="#predictRaceWinner"
+				aria-expanded="false" aria-controls="predictRaceWinner">
+				Predict Winning Horse</button>
+		</div>
+	</div>
+
+	<div class="collapse mt-25 justify-content-md-center"
+		id="uploadResultFile">
+		<div class="col-md-6 card card-body border shadow">
+			<form  >
+			<h4 class="mb-10"> Upload Daily File </h4>
+			<div class="form-group mb-10">
+				<label class="form- control col-md-4"> Result File</label>
+				<input id="resultFile" type="file" name="file" accept=".xlsx" />
+			</div>
+			<div class="form-group">
+				<label class="form- control col-md-4"> Speed File</label>
+				<input id="speedFile2" type="file" name="file" accept=".xlsx" />
+			</div>
+			<div class="row mb-10  form-group">
+				<label class="form- control col-md-4"> Race Date </label>
+				<input type="date" id ="speedFileDate2" name="bday" min="2020-01-01">
+			</div>
+			<div class="row mb-10  form-group">
+				<div class="col-md-4"></div>
+				<div class="col-md-4">
+					<button class="btn btn-lg btn-success mt-10 mb-10 btn-block" id="uploadResult">Upload File</button>
+				</div>
+			</div>
+			
+			<label class="mb-10" id="resultResponse"></label>
+			
+			</form>
+		</div>
+	</div>
+	
+	<div class="collapse mt-25 justify-content-md-center"
+		id="uploadSpeedFile">
+		<div class="col-md-6 card card-body border shadow">
+			<form>
+			<h4 class="mb-10"> Upload Speed File </h4>
+			
+			<div class="form-group">
+				<input id="speedFile" type="file" name="file" accept=".xlsx" />
+				<input type="date" id ="speedFileDate" name="bday" min="2020-01-01">
+			</div>
+			<div class="row mb-10 form-group">
+				<button class="btn btn-lg btn-success mt-10 mb-10" id="uploadSpeed">Upload File</button>
+			</div>
+			<label class="mb-10" id="speedResponse"></label>
+			</form>
+		</div>
+	</div>
+
+	<div class="collapse mt-25" id="predictRaceWinner">
+		<div class="form-group"><button class ="btn btn-primary" id= "addConditions">Add new Conditions</button></div>
+		
+		<div class = "row col-md-12 mt-25">
+		
+			<div class ="col-md-2 mb-10" id="conditionButton">
+			
+			
+			
+			</div>
+			<div class ="col-md-10 mb-10" id= "condition_info" >
+				
+			
+			
+			</div>
+		</div>
+			
+	</div>
+	
+	  <div class="modal fade conditionModel" tabindex="-1" role="dialog" aria-hidden="true" style ="padding-left : 0px !important;">
+         <div class="modal-dialog col-md-11" >
+            <div class="modal-content container-fluid" style="font-size: 13px;">
+               <div class="modal-header">
+                  <h5 class="modal-title" >Condition Applier</h5>
+				  <button type="button" class="close"  onclick= '$(".conditionModel").modal("hide");'>
+                  <span aria-hidden="true">&times;</span>
+                  </button>
+               </div>
+               <div class="row ">
+                  <div class="col-md-6 border-right border-bottom pt-10 pb-10">
+                     <!-- <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_toprow">No of top rows</label>
+                        <div class="col-md-9">
+                           <input id="speed_toprow_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div> -->
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_point">Speed Point</label>
+                        <div class="col-md-6">
+                           <select id="result_speedpoint_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_speedpoint_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     
+                     <div class="row form-group ">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Day Since Run</label>
+                        <div class="col-md-6">
+                           <select id="speed_daysincerun_condition" name="speed_daysincerun" class="form-control">
+								<option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="speed_daysincerun_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Course Name</label>
+                        <div class="col-md-9">
+                           <select id="speed_course_condition" name="speed_course" class="form-control">
+							<option value="" selected>Select your track</option>	
+							<option value="Aintree">Aintree</option>	<option value="Ascot">Ascot</option>	<option value="Ayr">Ayr</option>	<option value="Ballinrobe">Ballinrobe</option>	<option value="Bangor">Bangor</option>	<option value="Bath">Bath</option>	<option value="Bellewstown">Bellewstown</option>	<option value="Beverley">Beverley</option>	<option value="Brighton">Brighton</option>	<option value="Carlisle">Carlisle</option>	<option value="Cartmel">Cartmel</option>	<option value="Catterick">Catterick</option>	<option value="Chelmsford City">Chelmsford City</option>	<option value="Cheltenham">Cheltenham</option>	<option value="Chepstow">Chepstow</option>	<option value="Chester">Chester</option>	<option value="Clonmel">Clonmel</option>	<option value="Cork">Cork</option>	<option value="Curragh">Curragh</option>	<option value="Doncaster">Doncaster</option>	<option value="Down Royal">Down Royal</option>	<option value="Downpatrick">Downpatrick</option>	<option value="Dundalk">Dundalk</option>	<option value="Epsom">Epsom</option>	<option value="Exeter">Exeter</option>	<option value="Fairyhouse">Fairyhouse</option>	<option value="Fakenham">Fakenham</option>	<option value="Ffos Las">Ffos Las</option>	<option value="Fontwell">Fontwell</option>	<option value="Galway">Galway</option>	<option value="Goodwood">Goodwood</option>	<option value="Gowran Park">Gowran Park</option>	<option value="Hamilton">Hamilton</option>	<option value="Haydock">Haydock</option>	<option value="Hereford">Hereford</option>	<option value="Hexham">Hexham</option>	<option value="Huntingdon">Huntingdon</option>	<option value="Kelso">Kelso</option>	<option value="Kempton">Kempton</option>	<option value="Kilbeggan">Kilbeggan</option>	<option value="Killarney">Killarney</option>	<option value="Laytown">Laytown</option>	<option value="Leicester">Leicester</option>	<option value="Leopardstown">Leopardstown</option>	<option value="Limerick">Limerick</option>	<option value="Lingfield">Lingfield</option>	<option value="Listowel">Listowel</option>	<option value="Ludlow">Ludlow</option>	<option value="Market Rasen">Market Rasen</option>	<option value="Musselburgh">Musselburgh</option>	<option value="Naas">Naas</option>	<option value="Navan">Navan</option>	<option value="Newbury">Newbury</option>	<option value="Newcastle">Newcastle</option>	<option value="Newmarket">Newmarket</option>	<option value="Newmarket">Newmarket</option>	<option value="Newton Abbot">Newton Abbot</option>	<option value="Nottingham">Nottingham</option>	<option value="Perth">Perth</option>	<option value="Plumpton">Plumpton</option>	<option value="Pontefract">Pontefract</option>	<option value="Punchestown">Punchestown</option>	<option value="Redcar">Redcar</option>	<option value="Ripon">Ripon</option>	<option value="Roscommon">Roscommon</option>	<option value="Salisbury">Salisbury</option>	<option value="Sandown">Sandown</option>	<option value="Sedgefield">Sedgefield</option>	<option value="Sligo">Sligo</option>	<option value="Southwell">Southwell</option>	<option value="Stratford">Stratford</option>	<option value="Taunton">Taunton</option>	<option value="Thirsk">Thirsk</option>	<option value="Thurles">Thurles</option>	<option value="Tipperary">Tipperary</option>	<option value="Tramore">Tramore</option>	<option value="Uttoxeter">Uttoxeter</option>	<option value="Warwick">Warwick</option>	<option value="Wetherby">Wetherby</option>	<option value="Wexford">Wexford</option>	<option value="Wincanton">Wincanton</option>	<option value="Windsor">Windsor</option>	<option value="Wolverhampton">Wolverhampton</option>	<option value="Worcester">Worcester</option>	<option value="Yarmouth">Yarmouth</option>	<option value="York">York</option>
+                           </select>
+                        </div>
+                     </div>
+                     <!-- <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Race Distance</label>
+                        <div class="col-md-6">
+                           <select id="speed_racedistance_condition" name="speed_racedistance" class="form-control" disable>
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="speed_racedistance_value" name="textinput" type="text" class="form-control input-md" disable>
+                        </div>
+                     </div> -->
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Official Going</label>
+                        <div class="col-md-9">
+                           <select id="speed_officialgoing_condition" class="form-control" multiple="multiple">
+							  <option value="Good To Firm">Good To Firm</option>
+							  <option value="Good">Good</option>
+							  <option value="Yielding">Yielding</option>
+							  <option value="Soft">Soft</option>
+							  <option value="Soft To Heavy">Soft To Heavy</option>
+							  <option value="Standard">Standard</option>
+							  <option value="Good To Yielding">Good To Yielding</option>
+							  <option value="Heavy">Heavy</option>
+							  <option value="Good To Soft">Good To Soft</option>
+							  <option value="Yielding To Soft">Yielding To Soft</option>
+							  <option value="Firm">Firm</option>
+							  <option value="Standard To Slow">Standard To Slow</option>
+							</select>
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Horse Class</label>
+                        <div class="col-md-9">
+                           <select id="speed_class_condition" class="form-control" multiple="multiple">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="Class 1">Class 1</option>
+                              <option value="Class 2">Class 2</option>
+                              <option value="Class 3">Class 3</option>
+                              <option value="Class 4">Class 4</option>
+                              <option value="Class 5">Class 5</option>
+                              <option value="Class 6">Class 6</option>
+                              <option value="Class 7">Class 7</option>
+                              <option value="Irish">Irish</option>
+                           </select>
+                        </div>
+                     </div>
+                     <!-- <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Race Surface</label>
+                        <div class="col-md-9">
+                           <select id="speed_Surface_condition" name="speed_racedistance" class="form-control" disable>
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="" selected>Select your value</option>
+                              <option value="Turf Flat">Turf Flat</option>
+                              <option value="Flat AW">Flat AW</option>
+                           </select>
+                        </div>
+                        
+                     </div> -->
+                     
+                     
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Distance Furlongs</label>
+                        <div class="col-md-6">
+                           <select id="result_distancefurlongs_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_distancefurlongs_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Race Type</label>
+                        <div class="col-md-9">
+                           <select id="result_racetype_condition" class="form-control" multiple="multiple">
+                              <option class="form-control" value='Handicap'>Handicap</option >	
+                              <option class="form-control" value='Maiden'>Maiden</option >	
+                              <option class="form-control" value='Non-Handicap'>Non-Handicap</option >	
+                              <option class="form-control" value='Handicap Nursery'>Handicap Nursery</option >	
+                              <option class="form-control" value='Novices'>Novices</option >	
+                              <option class="form-control" value='Handicap Hurdle'>Handicap Hurdle</option >	
+                              <option class="form-control" value='Novices Hurdle'>Novices Hurdle</option >	
+                              <option class="form-control" value='Novices Chase'>Novices Chase</option >	
+                              <option class="form-control" value='Handicap Chase'>Handicap Chase</option >	
+                              <option class="form-control" value='NH Flat'>NH Flat</option >	
+                              <option class="form-control" value='Handicap Novices Chase'>Handicap Novices Chase</option >	
+                              <option class="form-control" value='Handicap Novices Hurdle'>Handicap Novices Hurdle</option >	
+                              <option class="form-control" value='Beginners Chase'>Beginners Chase</option >	
+                              <option class="form-control" value='Handicap Claimer'>Handicap Claimer</option >	
+                              <option class="form-control" value='Maiden NH Flat'>Maiden NH Flat</option >	
+                              <option class="form-control" value='Maiden Hurdle'>Maiden Hurdle</option >	
+                              <option class="form-control" value='Hurdle'>Hurdle</option >	
+                              <option class="form-control" value='Seller'>Seller</option >	
+                              <option class="form-control" value='Chase'>Chase</option >	
+                              <option class="form-control" value='Claimer'>Claimer</option >	
+                              <option class="form-control" value='Handicap Seller Hurdle'>Handicap Seller Hurdle</option >	
+                              <option class="form-control" value='Claimer Chase'>Claimer Chase</option >	
+                              <option class="form-control" value='Seller Hurdle'>Seller Hurdle</option >	
+                              <option class="form-control" value='Maiden Claimer'>Maiden Claimer</option >	
+                              <option class="form-control" value='Hunters Chase'>Hunters Chase</option >	
+                              <option class="form-control" value='Handicap Seller'>Handicap Seller</option >	
+                              <option class="form-control" value='Claimer Hurdle'>Claimer Hurdle</option >	
+                              <option class="form-control" value='Maiden Hunters Chase'>Maiden Hunters Chase</option >	
+                              <option class="form-control" value='Handicap Maiden'>Handicap Maiden</option >	
+                              <option class="form-control" value='Novices Seller Hurdle'>Novices Seller Hurdle</option >	
+                              <option class="form-control" value='Handicap Seller Chase'>Handicap Seller Chase</option >	
+                              <option class="form-control" value='Novices Hunters Chase'>Novices Hunters Chase</option >
+                           </select>
+                        </div>
+                     </div>
+                     
+                  </div>
+                  <div class="col-md-6 pt-10 border-bottom pb-10">
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Horse Rank</label>
+                        <div class="col-md-6">
+                           <select id="result_horserank_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_horserank_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Finishing Position</label>
+                        <div class="col-md-6">
+                           <select id="result_finishingPosition_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_finishingPosition_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                      <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_fav">Is Horse Favorite</label>
+                        <div class="col-md-9">
+                           <select id="speed_fav_condition" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                           </select>
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">BFSP</label>
+                        <div class="col-md-6">
+                           <select id="result_bfsp_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_bfsp_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">BFSP Place</label>
+                        <div class="col-md-6">
+                           <select id="result_bfspplace_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_bfspplace_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">PLCS Paid</label>
+                        <div class="col-md-6">
+                           <select id="result_plcspaid_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_plcspaid_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                     
+                     <div class="row form-group">
+                        <label class="col-md-3 control-label" for="speed_daysincerun">Card Number</label>
+                        <div class="col-md-6">
+                           <select id="result_cardnumber_condition" name="speed_racedistance" class="form-control">
+						   <option class="form-control" value='' selected>select options</option >	
+                              <option value="=">Equal</option>
+                              <option value=">">Greater</option>
+                              <option value="<">Less</option>
+                              <option value="between">Between</option>
+                           </select>
+                        </div>
+                        <div class="col-md-3">
+                           <input id="result_cardnumber_value" name="textinput" type="text" class="form-control input-md">
+                        </div>
+                     </div>
+                  </div>
+               </div>
+			   
+			   <div class="row">
+					<label class="col-md-12" style="font-weight:bold; font-size:18px;" id="dataValidatedLabel">Data Validated</label>
+					<!-- <label class="col-md-12" id ="generated_Limit"></label> -->
+					<label class="col-md-12" id ="generated_condition" ></label>
+					<label class="col-md-12" style ="color: red;"id ="generated_Note" ></label>
+			   </div>
+				<div class="modal-footer text-center mb-10">
+					<button type="button" class= "btn btn-primary" id="validateCondition">Validate Condition</button>
+					<button type="button" class= "btn btn-success" id="addCondition">Add Condition</button>
+               </div>
+			</div>
+         </div>
+      </div>
+   
+
+</body>
+
+</HTML>

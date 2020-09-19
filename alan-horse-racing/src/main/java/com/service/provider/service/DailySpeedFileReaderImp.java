@@ -29,19 +29,21 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import com.service.provider.exceptions.InvalidValueException;
+import com.service.provider.model.DailySpeedFileEntity;
 import com.service.provider.model.SpeedFileEntity;
 import com.service.provider.model.TrackShortName;
+import com.service.provider.repository.DailySpeedFileRepository;
 import com.service.provider.repository.SpeedFileRepository;
 
-@Service
-public class SpeedFileReaderImp implements SpeedFileReader {
 
+@Service
+public class DailySpeedFileReaderImp implements DailySpeedFileReader{
 	private static final Logger logger = LogManager.getLogger();
 	public List<String> headerList = new ArrayList<>();
 	public List<TrackShortName> trackShortName = new ArrayList<>();
 
 	@Autowired
-	SpeedFileRepository speedFileRepository;
+	DailySpeedFileRepository dailySpeedFileRepository;
 
 	// public Date todaysDate = new Date();
 	public Date todaysDate = new Date();
@@ -53,8 +55,9 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 			"previousrundate" };
 
 	public List<String> sqlHeaderList = new ArrayList<>(Arrays.asList(columnHeader));
-	public List<String> savedHorseNames = new ArrayList<String>();
+	public List<String> savedHorsesNames = new ArrayList<String>();
 	long horseRank = 1;
+
 
 	@Override
 	public void readAndSaveSpeedFile(FileInputStream file, List<TrackShortName> trackShortNames, String date)
@@ -70,8 +73,8 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 
 		try {
 			// String dateString = new SimpleDateFormat("yyyy-MM-dd").format(todaysDate);
-			int deletedCount = speedFileRepository.deleteBySheetfiledate(todaysDate);
-			logger.info("Old count deleted = " + deletedCount);
+			dailySpeedFileRepository.deleteAll();;
+			logger.info("Previous day data deleted");
 
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -88,7 +91,7 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 			for (int sheetNumber = 0; sheetNumber < workbook.getNumberOfSheets(); sheetNumber++) {
 
 				Sheet sheet = workbook.getSheetAt(sheetNumber);
-				savedHorseNames = new ArrayList<String>();
+				savedHorsesNames = new ArrayList<String>();
 				horseRank = 1;
 				logger.info("Reading sheet number = " + sheetNumber + " :: " + sheet.getSheetName());
 				i = 0;
@@ -136,14 +139,12 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 							break;
 						}
 					} catch (Exception e) {
-
 						try {
 							workbook.close();
 						} catch (IOException e1) {
 
 							logger.info(e1.getMessage() + "");
 						}
-
 						logger.info("Complete data saved");
 
 						throw new InvalidValueException(
@@ -155,16 +156,14 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 					} else if (i == 1 && (sheet.getRow(2) != null && sheet.getRow(2).getCell(1) != null
 							&& sheet.getRow(2).getCell(1).getNumericCellValue() + "" != "")) {
 						getRowDataJson(secondRow, row, sheetName, raceTime, dataSheetName, i);
-						savedHorseNames.add(row.getCell(0).getRichStringCellValue().getString() + "");
+						savedHorsesNames.add(row.getCell(0).getRichStringCellValue().getString() + "");
 					} else {
-						if(!savedHorseNames.contains(row.getCell(0).getRichStringCellValue().getString() + "")) {
+						if(!savedHorsesNames.contains(row.getCell(0).getRichStringCellValue().getString() + "")) {
 							getRowDataJson(row, row, sheetName, raceTime, dataSheetName, i);
-							savedHorseNames.add(row.getCell(0).getRichStringCellValue().getString() + "");
+							savedHorsesNames.add(row.getCell(0).getRichStringCellValue().getString() + "");
 						}
 					}
-
 					i++;
-
 				}
 			}
 		} catch (IOException e) {
@@ -206,7 +205,7 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 	public void getRowDataJson(Row row2, Row row, String sheetName, String raceTime, String dataSheetName,
 			int rowNumber) {
 
-		SpeedFileEntity speedObject = new SpeedFileEntity();
+		DailySpeedFileEntity speedObject = new DailySpeedFileEntity();
 		speedObject.setSheetfiledate(todaysDate);
 
 		int index = 0;
@@ -321,7 +320,7 @@ public class SpeedFileReaderImp implements SpeedFileReader {
 		}
 
 		try {
-			speedFileRepository.saveAndFlush(speedObject);
+			dailySpeedFileRepository.saveAndFlush(speedObject);
 			horseRank += 1;
 		} catch (DataIntegrityViolationException e) {
 			if (!e.getCause().toString().startsWith("org.hibernate.exception.ConstraintViolationException")) {

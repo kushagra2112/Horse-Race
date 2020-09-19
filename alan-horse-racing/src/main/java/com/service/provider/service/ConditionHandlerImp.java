@@ -1,5 +1,8 @@
 package com.service.provider.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +65,18 @@ public class ConditionHandlerImp implements ConditionHandler{
 		}catch(Exception e) {
 			logger.error(e.getMessage());
 			return "Something went wrong";
+		}
+	}
+
+	@Override
+	public List<ConditionSaver> getAllConditions() {
+		List<ConditionSaver> conditions = new ArrayList<ConditionSaver>();
+		try {
+			conditions = conditionSaverRepository.findAll();
+			return conditions;
+		}catch(Exception e) {
+			logger.error(e.getMessage());
+			return conditions;
 		}
 	}
 

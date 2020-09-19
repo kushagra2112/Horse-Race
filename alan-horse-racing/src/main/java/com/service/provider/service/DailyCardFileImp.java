@@ -5,11 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -25,87 +23,74 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.service.provider.model.ResultFileEntity;
-import com.service.provider.repository.ResultFileRepository;
-
-
+import com.service.provider.model.CardFileEntity;
+import com.service.provider.repository.DailyCardFileRepositpry;
 @Service
-public class ResultFileReaderImp implements ResultFileReader {
-
+public class DailyCardFileImp implements DailyCardFile {
+	
 	@Autowired
-	ResultFileRepository resultFileRepository;
+	DailyCardFileRepositpry dailyCardFileRepositpry;
 	
 	
 	private static final Logger logger = LogManager.getLogger();
+	public String[] headers = {"raceDate","raceTime","track","raceName","raceDistance","distFurlongs",
+			"raceClass","goingDescription","prizeMoney","numberOfRunners","trackDirection","cardNo","horseName",
+			"horseAge","jockeyName","jockeysClaim","trainer","stallPositioning","officialRating","weightpounds",
+			"bfsp","form","days","headgear","stallion","dam","horsetype","cd","fav"};
 
-	public String[] headers = { "raceDate", "raceTime", "track", "raceName", "raceRestrictionsAge", "raceClass",
-			"major", "raceDistance", "prizeMoney", "goingDescription", "numberOfRunners", "place", "distbt",
-			"horseName", "stall", "trainer", "horseAge", "jockeyName", "jockeysClaim", "pounds", "odds", "fav",
-			"officialRating", "comptime", "comtimeNumeric", "totalDstBt", "medianOr", "distFurlongs",
-			"placingNumerical", "rCode", "bfsp", "bfspPlace", "plcsPaid", "bfPlcsPaid", "yards", "railMove", "raceType",
-			"horseComment", "cardNo", "stallPositioning", "trackDirection", "headgear" };
-
+	public String[] raceTypesArray = {"Handicap Novices Chase","Handicap Novices Hurdle","Maiden NH Flat",
+			"Handicap Seller Hurdle","Maiden Hunters Chase","Novices Seller Hurdle","Handicap Seller Chase",
+			"Novices Hunters Chase","Handicap Hunters Chase","Handicap Nursery","Handicap Hurdle",
+			"Novices Hurdle","Novices Chase","Handicap Chase","NH Flat","Beginners Chase","Handicap Claimer",
+			"Maiden Hurdle","Claimer Chase","Seller Hurdle","Maiden Claimer","Hunters Chase","Handicap Seller",
+			"Claimer Hurdle","Handicap Maiden","Handicap","Maiden","Non-Handicap","Novices","Hurdle","Seller",
+			"Chase","Claimer", "Novice" , "Selling"};
+	
 	public List<String> headerList = new ArrayList<>(Arrays.asList(headers));
+	public List<String> raceTypeList =  new ArrayList<>(Arrays.asList(raceTypesArray));
 
 	@Override
-	public boolean readJExcel(FileInputStream file , String date)
+	public boolean readJExcel(FileInputStream file)
 			throws FileNotFoundException {
 
-		Workbook workbook = null;
-		Date todaysDate = new Date();
-		
-		try {
-			if (date != null || date != "") {
-				todaysDate = new SimpleDateFormat("yyyy-MM-dd").parse(date);
-			}
-		} catch (ParseException e) {
-			logger.error(e.getMessage());
-		}
-		
-		try {
-			//String dateString = new SimpleDateFormat("yyyy-MM-dd").format(todaysDate);
-			int deletedCount = resultFileRepository.deleteByRaceDate(todaysDate);
-			logger.info("Old count deleted from result file = " +  deletedCount);
-			
-		}catch(Exception e) {
-			logger.error(e.getMessage());
-		}
-		int i = 0;
+		Workbook workbook;
+		CardFileEntity resultFile = new CardFileEntity();
 		try {
 			workbook = new XSSFWorkbook(file);
+			dailyCardFileRepositpry.deleteAll();
+			logger.info("Card File old data deleted");
+			
 			Sheet sheet = workbook.getSheetAt(0);
-			for (Row row : sheet) {
-				if (i == 0) {
-					i++;
-					continue;
-				} else {
-					if (row.getCell(1).getDateCellValue() + "" == "") {
-						break;
+			int i = 0;
+			try {
+				for (Row row : sheet) {
+					if (i == 0) {
+						i++;
+						continue;
+					} else {
+						if (row.getCell(1).getDateCellValue() + "" == "") {
+							break;
+						}
+						resultFile = getRowDataJson(row);
+						dailyCardFileRepositpry.saveAndFlush(resultFile);
+						i++;
 					}
-					resultFileRepository.saveAndFlush(getRowDataJson(row));
-					i++;
 				}
+			}catch(Exception e) {
+				logger.info("Card File :: Something wrong in line number " + (i+1));
+				return false;
+			}finally {
+				workbook.close();
 			}
 		} catch (IOException e1) {
-			logger.info("Something went wrong in line number :: " +  i);
 			logger.error(e1.getMessage());
-			return false;
 		}
-		finally{
-			try {
-				workbook.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		logger.info("Result file is uploaded sussessfully");
 		return true;
-
 	}
 
-	public ResultFileEntity getRowDataJson(Row row) {
+	public CardFileEntity getRowDataJson(Row row) {
 
-		ResultFileEntity resultObject = new ResultFileEntity();
+		CardFileEntity resultObject = new CardFileEntity();
 		
 		String raceDateAndTime = "";
 
@@ -196,30 +181,10 @@ public class ResultFileReaderImp implements ResultFileReader {
 		resultObject.setHorseName(
 				(resultObject.getHorseName() != null) ? resultObject.getHorseName().split("[(]")[0].trim() : "");
 
-		resultObject.setPlacingNumerical(resultObject.getPlacingNumerical().replaceAll("RR", "0").replaceAll("RO", "0")
-				.replaceAll("CO", "0").replaceAll("Non Runner", "0").replaceAll("DSQ", "0"));
-		resultObject.setPlacingNumerical(
-				resultObject.getPlacingNumerical().toUpperCase().replaceAll("PU", "0").replaceAll("F", "0")
-						.replaceAll("UR", "0").replaceAll("SU", "0").replaceAll("BD", "0").replaceAll(".0", ""));
-
-		try {
-			resultObject.setPlacingNumerical(Integer.parseInt(resultObject.getPlacingNumerical()) + "");
-		} catch (Exception e) {
-			resultObject.setPlacingNumerical("0");
-		}
-
 		if (resultObject.getBfsp() == "" || resultObject.getBfsp() == "0") {
 			resultObject.setBfsp("0.0");
 		}
-		if (resultObject.getBfspPlace() == "" || resultObject.getBfspPlace() == "0") {
-			resultObject.setBfspPlace("0.0");
-		}
-		if (resultObject.getPlcsPaid() == "" || resultObject.getPlcsPaid() == "0") {
-			resultObject.setPlcsPaid("0.0");
-		}
-		if (resultObject.getBfPlcsPaid() == "" || resultObject.getBfPlcsPaid() == "0") {
-			resultObject.setBfPlcsPaid("0.0");
-		}
+		
 		if (resultObject.getHorseAge() == "" || resultObject.getHorseAge() == null) {
 			resultObject.setHorseAge("0");
 		}
@@ -228,8 +193,25 @@ public class ResultFileReaderImp implements ResultFileReader {
 			resultObject.setCardNo("0");
 		}
 		
-		if(resultObject.getFav() == null || resultObject.getFav() == "" ) {
+		if(resultObject.getFav() == null) {
 			resultObject.setFav("");
+		}
+		
+		if(resultObject.getRaceClass() == null) {
+			resultObject.setRaceClass("");
+		}
+		
+		for(String raceType :  raceTypeList) {
+			if(resultObject.getRaceName().toLowerCase().indexOf(raceType.toLowerCase()) >0) {
+				if(raceType.equalsIgnoreCase("novice")) {
+					resultObject.setRaceName("Novices");
+				}else if(raceType.equalsIgnoreCase("selling")) {
+					resultObject.setRaceName("Seller");
+				}else {
+					resultObject.setRaceName(raceType);
+				}
+				break;
+			}
 		}
 		
 		return resultObject;

@@ -4,92 +4,142 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.provider.model.AnalysisResponse;
 import com.service.provider.model.ConditionReceiver;
+import com.service.provider.model.ConditionSaver;
+import com.service.provider.model.DailyHorseDataResult;
 import com.service.provider.model.HorseDataResult;
 import com.service.provider.model.ListOfWinners;
 import com.service.provider.model.PositionAnalysis;
 import com.service.provider.model.StrikeInfo;
 import com.service.provider.model.WinningPercentage;
+import com.service.provider.repository.ConditionSaverRepository;
+import com.service.provider.repository.DailyHorseRaceAnalysisRepository;
 import com.service.provider.repository.HorseRaceAnalysisRepository;
 import com.service.provider.repository.SpeedFileRepository;
 
-@Service
-public class HorseAnalysisImp implements HorseAnalysis {
 
+
+
+@Service
+public class DailyHorseraceAnalysisImp implements DailyHorseRaceAnalysis {
+	private static final Logger logger = LogManager.getLogger();
+	
+	ObjectMapper mapper = new ObjectMapper();
+	
 	@Autowired
 	SpeedFileRepository speedFileRepository;
 
 	@Autowired
 	HorseRaceAnalysisRepository horseRaceAnalysisRepository;
-
+	
+	@Autowired
+	ConditionSaverRepository conditionSaverRepository;
+	
+	@Autowired
+	DailyHorseRaceAnalysisRepository dailyHorseRaceAnalysisRepository;
+	
 	public static String raceCondition = "";
-	/*
-	 * @Override public Map<String, HashMap<String , List<ListOfTopHorses>>>
-	 * getListOfTopHorses() {
-	 * 
-	 * List<String> sheetNames = speedFileRepository.findDistinctSheetName();;
-	 * 
-	 * Map<String, HashMap<String , List<ListOfTopHorses>>> response = new
-	 * LinkedHashMap<String, HashMap<String , List<ListOfTopHorses>>>();
-	 * HashMap<String , List<ListOfTopHorses>> subResponse = new HashMap<String ,
-	 * List<ListOfTopHorses>>();
-	 * 
-	 * //String sheet = sheetNames.get(0); Collections.sort(sheetNames); for(String
-	 * sheet : sheetNames) { if(response.get(sheet) != null) { subResponse =
-	 * response.get(sheet); }else { subResponse = new HashMap<String ,
-	 * List<ListOfTopHorses>>(); }
-	 * 
-	 * subResponse.put("Limit 5 in speed file" ,
-	 * getTopHorsesObject(speedFileRepository.findAnalysisForHorse(sheet, 5)));
-	 * response.put(sheet, subResponse);
-	 * 
-	 * } return response;
-	 * 
-	 * return null;
-	 * 
-	 * }
-	 */
-
+	
 	@Override
-	public AnalysisResponse analyzeHorseWithCondition(ConditionReceiver[] conditions) {
-
-		HashMap<String, List<WinningPercentage>> subResponse = new HashMap<String, List<WinningPercentage>>();
-		AnalysisResponse winnerInfo = new AnalysisResponse();
-
-		StringBuilder conditionString = new StringBuilder();
-		for (ConditionReceiver condition : conditions) {
-			conditionString.append(condition.responseInString());
-		}
-
-		winnerInfo.setCondition(conditionString.toString());
-
-		List<HorseDataResult> sheetHorseDetails = horseRaceAnalysisRepository.findAnalysisForHorse();
-
-		sheetHorseDetails = filterValues(sheetHorseDetails, conditions);
-
-		winnerInfo.setWinRaceStats(getListOfHorsePerformance(sheetHorseDetails, conditions));
-
-		winnerInfo.setWinners(getWinnerInformation(sheetHorseDetails));
-
-		winnerInfo.setDaysReport(getDaysReport(sheetHorseDetails));
-
-		winnerInfo.setStikes(getStrikeReport(sheetHorseDetails));
+	public List<AnalysisResponse> analyzeHorseWithCondition() {
 		
-		winnerInfo.setErrorResponse(null);
+		List<AnalysisResponse> completeWinnerInfo = new ArrayList<AnalysisResponse>();
+		
+		List<ConditionSaver> listOfConditions = new ArrayList<ConditionSaver>();
+		
+		listOfConditions  =  conditionSaverRepository.findAll();
+		
+		for(ConditionSaver consitionStringValue : listOfConditions) {
+			
+			ConditionReceiver[] conditions = null;
+			try {
+				conditions = mapper.readValue(consitionStringValue.getConditionValue(), ConditionReceiver[].class);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+			
+			AnalysisResponse winnerInfo = new AnalysisResponse();
 
-		return winnerInfo;
+			StringBuilder conditionString = new StringBuilder();
+			
+			for (ConditionReceiver condition : conditions) {
+				conditionString.append(condition.responseInString());
+			}
+
+			winnerInfo.setCondition(conditionString.toString());
+			//logger.info("Started working on condition " + conditionString.toString());
+			List<HorseDataResult> sheetHorseDetails = horseRaceAnalysisRepository.findAnalysisForHorse();
+
+			//logger.info("saved data :: " +  sheetHorseDetails.size());
+			
+			sheetHorseDetails = filterValues(sheetHorseDetails, conditions);
+			
+			//logger.info("saved data filtered data " +  sheetHorseDetails.size());
+			
+			winnerInfo.setWinRaceStats(getListOfHorsePerformance(sheetHorseDetails, conditions));
+
+			//logger.info("Completed win race states");
+			
+			winnerInfo.setDaysReport(getDaysReport(sheetHorseDetails));
+
+			//logger.info("Completed day report");
+			winnerInfo.setStikes(getStrikeReport(sheetHorseDetails));
+			
+			winnerInfo.setErrorResponse(null);
+			
+			//logger.info("Got the result for analysis " +  sheetHorseDetails.size());
+			
+			List<DailyHorseDataResult> dailyHorseData = dailyHorseRaceAnalysisRepository.findAnalysisForHorse();
+			
+			//logger.info("Received the daily data :: " +   dailyHorseData.size());
+			dailyHorseData = filterDailyValues(dailyHorseData, conditions);
+			
+			//logger.info("Received the daily data filterd value :: " +   dailyHorseData.size());
+			
+			winnerInfo.setWinners(getWinnerInformation(dailyHorseData));
+			
+			//logger.info("condition result saved successfully");
+			
+			completeWinnerInfo.add(winnerInfo);
+			
+		}
+		
+
+		return completeWinnerInfo;
 	}
 
+	private List<ListOfWinners> getWinnerInformation(List<DailyHorseDataResult> sheetHorseDetails) {
+
+		List<ListOfWinners> winnerInfo = new ArrayList<ListOfWinners>();
+		if (sheetHorseDetails != null && sheetHorseDetails.size() != 0) {
+			ListOfWinners winner = new ListOfWinners();
+
+			for (DailyHorseDataResult horse : sheetHorseDetails) {
+				winner = new ListOfWinners();
+				winner.setHorseName(horse.getHorse());
+				winner.setRaceDate(new SimpleDateFormat("yyyy-MM-dd").format(horse.getRaceDate()));
+				winner.setTrack(horse.getCourse());
+				winner.setBfsp(horse.getBfsp());
+				winner.setDistance(horse.getDistFurlongs());
+				winnerInfo.add(winner);
+			}
+		}
+		return winnerInfo;
+	}
+	
+	
 	private List<PositionAnalysis> getDaysReport(List<HorseDataResult> sheetHorseDetails) {
 		List<PositionAnalysis> daysReport = new ArrayList<PositionAnalysis>();
 
@@ -272,28 +322,6 @@ public class HorseAnalysisImp implements HorseAnalysis {
 		return horseData;
 	}
 
-	private List<ListOfWinners> getWinnerInformation(List<HorseDataResult> sheetHorseDetails) {
-
-		List<ListOfWinners> winnerInfo = new ArrayList<ListOfWinners>();
-		if (sheetHorseDetails.size() != 0) {
-			sheetHorseDetails = sheetHorseDetails.stream().filter(d -> d.getPlacingNumerical() == 1)
-					.collect(Collectors.toList());
-			ListOfWinners winner = new ListOfWinners();
-
-			for (HorseDataResult horse : sheetHorseDetails) {
-				winner = new ListOfWinners();
-				winner.setHorseName(horse.getHorse());
-				winner.setRaceDate(new SimpleDateFormat("yyyy-MM-dd").format(horse.getRaceDate()));
-				winner.setTrack(horse.getCourse());
-				winner.setBfsp(horse.getBfsp());
-				winner.setDistance(horse.getDistFurlongs());
-				winnerInfo.add(winner);
-			}
-		}
-		return winnerInfo;
-	}
-
-
 	private List<HorseDataResult> filterValues(List<HorseDataResult> sheetHorseDetails,
 			ConditionReceiver[] conditions) {
 
@@ -354,6 +382,61 @@ public class HorseAnalysisImp implements HorseAnalysis {
 				sheetHorseDetails = filterExecution.executuefilter(filterCondition, sheetHorseDetails, condition);
 			}
 
+		}
+
+		return sheetHorseDetails;
+	}
+
+	private List<DailyHorseDataResult> filterDailyValues(List<DailyHorseDataResult> sheetHorseDetails,
+			ConditionReceiver[] conditions) {
+		FilterExecution filterExecution = new FilterExecution();
+		for (ConditionReceiver condition : conditions) {
+			//logger.info("applying filter for " + condition.toString());
+			//logger.info("current data size " + sheetHorseDetails.size());
+			if (condition.getConditionParameter().equalsIgnoreCase("daySinceRun")) {
+				FilterConditions filterCondition = new DaySinceRunFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("course")) {
+				FilterConditions filterCondition = new CourseFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("raceDistance")) {
+				FilterConditions filterCondition = new RaceDistanceFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("officialGoing")) {
+				FilterConditions filterCondition = new OfficialGoingFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("classCaptured")) {
+				FilterConditions filterCondition = new ClassCapturedFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("raceSurface")) {
+				FilterConditions filterCondition = new RaceSurfaceFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("speedPoint")) {
+				FilterConditions filterCondition = new SpeedPointFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("distanceFurlongs")) {
+				FilterConditions filterCondition = new DistanceFurlongsFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("rank")) {
+				FilterConditions filterCondition = new RankFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("finishingPosition")) {
+				FilterConditions filterCondition = new FinishingPositionFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("favorite")) {
+				FilterConditions filterCondition = new FavoriteHorseFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			}else if (condition.getConditionParameter().equalsIgnoreCase("raceType")) {
+				FilterConditions filterCondition = new RaceTypeFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("bfsp")) {
+				FilterConditions filterCondition = new BfspFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			} else if (condition.getConditionParameter().equalsIgnoreCase("cardNumber")) {
+				FilterConditions filterCondition = new CardNumberFilter();
+				sheetHorseDetails = filterExecution.executueDailyfilter(filterCondition, sheetHorseDetails, condition);
+			}
+			//logger.info("data after filter size " + sheetHorseDetails.size());
 		}
 
 		return sheetHorseDetails;

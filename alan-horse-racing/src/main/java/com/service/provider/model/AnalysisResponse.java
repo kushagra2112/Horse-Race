@@ -8,7 +8,16 @@ public class AnalysisResponse {
 	private List<ListOfWinners> winners;
 	private List<PositionAnalysis> daysReport;
 	private List<StrikeInfo> stikes;
+	private ResponseData errorResponse;
 	
+	public ResponseData getErrorResponse() {
+		return errorResponse;
+	}
+
+	public void setErrorResponse(ResponseData errorResponse) {
+		this.errorResponse = errorResponse;
+	}
+
 	public List<PositionAnalysis> getDaysReport() {
 		return daysReport;
 	}
@@ -52,8 +61,7 @@ public class AnalysisResponse {
 	@Override
 	public String toString() {
 		return "AnalysisResponse [condition=" + condition + ", winRaceStats=" + winRaceStats + ", winners=" + winners
-				+ ", daysReport=" + daysReport + ", stikes=" + stikes + "]";
+				+ ", daysReport=" + daysReport + ", stikes=" + stikes + ", errorResponse=" + errorResponse + "]";
 	}
-
 		
 }
